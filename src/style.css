@@ -1,0 +1,648 @@
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif; /* Modernes Font-Stack */
+  line-height: 1.5;
+  font-weight: 400;
+  color-scheme: light dark;
+  color: #e8edf5;
+  background-color: #242830;
+}
+
+body {
+  margin: 0;
+  padding: 2rem;
+  box-sizing: border-box; /* Stellt sicher, dass Padding die Gesamtbreite nicht beeinflusst */
+}
+
+#app {
+  width: 100%; /* Füllt die verfügbare Breite aus */
+  text-align: left; /* Links ausrichten für ein Standard-Layout */
+}
+
+/* --- NEUE LAYOUT-STRUKTUR (Haupt-Container) --- */
+.page-container {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+}
+
+.sidebar-left {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 400px; /* Etwas schmaler, um dem Hauptinhalt mehr Platz zu geben */
+  flex-shrink: 0; /* Verhindert, dass die Seitenleiste schrumpft */
+}
+
+.sidebar-right {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 360px; /* Etwas schmaler, um dem Hauptinhalt mehr Platz zu geben */
+  flex-shrink: 0; /* Verhindert, dass die Seitenleiste schrumpft */
+}
+
+/* --- Hauptinhaltsbereich (Security Alert) --- */
+#security-alert-container {
+  flex: 1; /* Nimmt den verfügbaren Platz ein */
+  background-color: #3a3f4a;
+  border-radius: 8px;
+  padding: 1.5rem; /* Behält einheitliches Padding bei */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  text-align: left;
+}
+
+/* --- Seitenleisten-Formulare (IT Dependencies & Context Info) --- */
+#it-dependencies-container,
+#compliance-container,
+#forensic-note-container {
+  background: #2f3a47;
+  width: 100%; /* Füllt die Breite des Elternelements (.sidebar-right) aus */
+  border-radius: 12px;
+  padding: 12px; /* Einheitliches Padding für alle Karten */
+  box-shadow: 0 3px 8px rgba(0,0,0,0.4);
+  color: #eaeaea;
+}
+
+/* Formüberschrift kleiner, weniger dominant */
+#it-dependencies-container h3,
+#compliance-container h3,
+#forensic-note-container h3 {
+  font-size: 1rem;
+  margin: 0; /* Margin wird vom Header übernommen */
+  color: #d0d0d0;
+}
+
+/* Spezifische Farbe für die Forensik-Notiz-Überschrift */
+#forensic-note-container h3 {
+  color: #6cb2eb;
+}
+
+/* NEU: Header für die Karten in der Seitenleiste */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  margin-bottom: 1rem;
+}
+
+/* NEU: Toggle-Button für das Ein-/Ausklappen */
+.toggle-btn {
+  background: none;
+  border: none;
+  color: #a0aec0;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toggle-btn svg {
+  transition: transform 0.2s ease-in-out;
+}
+
+.toggle-btn[aria-expanded="false"] svg {
+  transform: rotate(-90deg);
+}
+
+/* NEU: Wrapper für den Inhalt, der ein- und ausgeklappt wird */
+.card-content {
+  overflow: hidden;
+  transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+  max-height: 1000px; /* Genug Höhe für den Inhalt */
+  opacity: 1;
+}
+
+/* Eingaben etwas kompakter */
+#it-dependencies-container select,
+#compliance-container input[type="checkbox"] {
+  font-size: 0.85rem;
+}
+
+/* NEU: Zustand für eingeklappte Karten */
+.collapsed .card-content {
+  max-height: 0;
+  opacity: 0;
+  margin-top: -1rem; /* Verhindert doppelten Margin beim Zuklappen */
+}
+/* Mobile: untereinander statt nebeneinander */
+@media (max-width: 900px) {
+  .page-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .sidebar-left {
+    width: 100%; /* Seitenleiste nimmt volle Breite ein */
+    order: -1; /* Timer-Karte oben auf Mobilgeräten */
+  }
+  .sidebar-right {
+    width: 100%; /* Seitenleiste nimmt volle Breite ein */
+  }
+}
+
+/* --- Allgemeine Sektionen-Karte (für dynamisch erzeugte Inhalte) --- */
+.card-section {
+  background: #2f3a47;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.35);
+  margin-top: 1.5rem;
+}
+
+/* --- Spezieller Style für Deadline-Container --- */
+#reporting-deadlines-container {
+  border: 2px solid #e74c3c; /* Roter Rahmen, passend zum .error-Stil */
+}
+
+/* --- Allgemeine Formular-Styles --- */
+
+h1, h3, h4 {
+  margin-top: 0;
+}
+
+h4 {
+  font-size: 1em;
+  margin-top: 1.5rem;
+  border-bottom: none;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+label {
+  display: inline-block; /* Ändert das Display-Verhalten */
+  margin-bottom: 0.5rem;
+  font-size: 0.9em;
+  color: #a0aec0;
+}
+
+input[type="text"],
+select {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #4a5568;
+  background-color: #242830;
+  color: #e8edf5;
+  box-sizing: border-box;
+  font-size: 1rem;
+}
+
+input[type="text"]:focus,
+select:focus {
+  outline: none;
+  border-color: #53c7ff;
+  box-shadow: 0 0 0 2px rgba(83, 199, 255, 0.3);
+}
+
+/* Spezifische Breite für das MITRE ATT&CK Suchfeld */
+#text-input {
+  min-width: 500px; /* Setzt eine Mindestbreite für das Eingabefeld */
+  width: 100%;      /* Erlaubt dem Feld, bei Bedarf größer zu werden */
+  max-width: 100%;  /* Verhindert, dass das Feld den Container überläuft */
+}
+
+/* Improve readability of dropdown options */
+select option {
+  background: #242830;
+  color: #e8edf5;
+}
+
+button {
+  margin-top: 1rem;
+  padding: 0.7rem 1.5rem;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  background-color: #53c7ff;
+  color: #242830;
+  font-weight: bold;
+  width: 100%;
+  transition: background-color 0.2s ease;
+}
+
+button:hover {
+  background-color: #82d9ff;
+}
+
+/* --- Checkbox-Styling für korrekte Ausrichtung --- */
+
+#compliance-form div {
+  display: flex;
+  align-items: center; /* Vertikal zentrieren */
+  gap: 0.75rem;       /* Abstand zwischen Checkbox und Label */
+  padding: 8px;
+  border-radius: 8px;
+  transition: background-color 0.15s ease;
+}
+
+#compliance-form div:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+#compliance-form input[type="checkbox"] {
+  accent-color: #53c7ff;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  cursor: pointer;
+}
+
+/* Label für Checkboxen anpassen, damit es nicht als Block agiert */
+#compliance-form div label {
+  display: inline; /* Stellt sicher, dass es neben der Checkbox bleibt */
+  margin-bottom: 0;
+  font-size: 1em;
+  color: #e8edf5;
+  cursor: pointer;
+}
+
+/* --- Fieldset-Styling --- */
+fieldset {
+  border: 1px solid #4a5568;
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.checkline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background .15s ease;
+}
+.checkline:hover { background: rgba(255,255,255,0.06); }
+
+.checkline input[type="checkbox"] {
+  accent-color: #53c7ff; 
+  width: 18px; 
+  height: 18px;
+  margin: 0;
+}
+
+.checkline span {
+  color: #e8edf5;
+  line-height: 1.2;
+}
+
+/* --- New style to hide elements --- */
+.visually-hidden {
+  /* Korrekte Methode, um ein Element zu verstecken, aber funktional zu halten */
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.timer-input {
+  text-align: center;
+  cursor: pointer; /* Zeigt dem Benutzer, dass das Feld anklickbar ist */
+  width: 100%; /* Nimmt die volle Breite des Containers ein */
+}
+
+/* --- End of new style --- */
+
+.display-area span {
+  font-weight: bold;
+  color: #61dafb;
+}
+
+/* NEUE REGEL für die Unter-Fieldsets */
+.sub-fieldset {
+  border: 1px solid #555;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-top: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.sub-fieldset > legend {
+  font-size: 0.9em;
+  font-weight: normal;
+  color: #ccc;
+  padding: 0 0.5rem;
+}
+
+/* --- Checkbox & Label Alignment --- */
+
+.checkbox-group div {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+input[type="checkbox"] {
+  margin-right: 0.5rem;
+  width: 1.2em;
+  height: 1.2em;
+  accent-color: #53c7ff;
+}
+
+/* --- Output Area --- */
+
+#output {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background-color: #242830;
+  border: 1px solid #4a5568;
+  border-radius: 6px;
+  text-align: left;
+  color: #cfd7e3;
+  white-space: pre-wrap; /* Ensures line breaks are respected */
+  font-family: 'Courier New', Courier, monospace;
+}
+
+select.invalid {
+  border: 2px solid #e74c3c;
+  outline: none;
+}
+.error {
+  color: #e74c3c;
+  margin-top: .5rem;
+}
+
+.criticality-prompt .btn,
+.fp-prompt .btn {
+  padding: .4rem .75rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.15);
+  background: rgba(255,255,255,.06);
+  cursor: pointer;
+}
+.criticality-prompt .btn:hover,
+.fp-prompt .btn:hover { background: rgba(255,255,255,.12); }
+
+/* gelbe Hinweise */
+.measure-yellow {
+  color: #FFD54F; /* warmes Gelb */
+  font-weight: 500;
+}
+
+.copy-controls {
+  position: relative; /* For absolute positioning of feedback */
+  display: flex;
+  align-items: center;
+  /* No gap here, as feedback is absolute */
+}
+
+.copy-btn {
+  /* Reset button styles */
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: none; /* Make it transparent */
+  cursor: pointer;
+  
+  /* Size and positioning */
+  width: 24px; /* Small size */
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  
+  /* Icon color */
+  color: #a0aec0; /* Light grey for the icon */
+  
+  /* Initial state and transition */
+  opacity: 0; /* Hidden by default */
+  transition: opacity 0.2s ease, background-color 0.2s ease;
+  border-radius: 4px; /* Slightly rounded corners */
+}
+
+.copy-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1); /* Subtle background on hover */
+}
+
+/* Style for the SVG icon inside the button */
+.copy-btn svg {
+  width: 16px; /* Icon size */
+  height: 16px;
+  stroke: currentColor; /* Use the button's color for the icon stroke */
+}
+
+.copy-feedback {
+  position: absolute; /* Position relative to .copy-controls */
+  top: -20px; /* Above the button */
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.7rem; /* Smaller font size */
+  color: #2ecc71; /* Green for success */
+  background-color: rgba(0, 0, 0, 0.7); /* Dark background for readability */
+  padding: 2px 6px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+  white-space: nowrap;
+  pointer-events: none; /* Allow clicks to pass through */
+  z-index: 10; /* Ensure it's above other elements */
+}
+
+.actions-header {
+  display: flex;
+  justify-content: space-between; /* Pushes content to ends */
+  align-items: center;
+  margin-bottom: 1rem;
+  position: relative; /* Needed for hover effect on button */
+}
+
+.actions-header:hover .copy-btn {
+  opacity: 1; /* Show button on hover of the header */
+}
+
+/* ---------- NEU: Styles für Phasen-Balken ---------- */
+.actions-wrapper {
+  display: flex; /* Stellt sicher, dass Tabelle und Phasen nebeneinander liegen */
+  gap: 1rem;
+  position: relative; /* Wichtig für die Positionierung der Balken */
+}
+
+.actions-list-container {
+  width: 100%;
+  flex-grow: 1; /* Nimmt den verfügbaren Platz ein */
+  position: relative; /* Wichtig für den Copy-Button */
+}
+
+.actions-list-container:hover .copy-btn {
+  opacity: 1;
+}
+
+.phases-container {
+  width: 120px; /* Feste Breite für die Phasen-Balken */
+  flex-shrink: 0; /* Verhindert, dass der Container schrumpft */
+  position: relative;
+  padding-top: 10px; /* Etwas Platz oben */
+}
+
+.phase-bar {
+  position: absolute;
+  width: 20px; /* Breite des Balkens */
+  background-color: #ccc; /* Standardfarbe */
+  border-radius: 10px;
+  transition: top 0.3s ease, height 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.phase-label {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  color: white;
+  font-weight: bold;
+  font-size: 12px;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+}
+
+
+/* --- Timestamp-Buttons und -Inputs in der Maßnahmenliste --- */
+#actions-display ol li {
+  display: list-item;     /* Stellt die Standard-Listenanzeige (mit Nummerierung) wieder her */
+  list-style-type: decimal; /* Explizit die Nummerierung erzwingen */
+  margin-bottom: 0.5rem; /* Etwas mehr Abstand zwischen den Punkten */
+}
+
+.measure-text {
+  flex-grow: 1; /* Sorgt dafür, dass der Text den verfügbaren Platz einnimmt */
+  flex-shrink: 1; /* Erlaubt dem Text zu schrumpfen, wenn der Platz knapp wird */
+  min-width: 0;   /* Wichtige Regel, die dem Flex-Item erlaubt, unter seine Inhaltsgröße zu schrumpfen */
+  word-break: break-word; /* Bricht lange Wörter um, um ein Überlaufen zu verhindern */
+}
+
+.measure-content-wrapper {
+  display: flex;         /* Flexbox für die Elemente innerhalb des Listenelements */
+  align-items: center;   /* Vertikal zentrieren */
+  gap: 0.75rem;          /* Abstand zwischen den Elementen */
+}
+
+input.timestamp-input { /* Erhöht die Spezifität, um die allgemeine input[type=text] Regel zu überschreiben  */
+  width: 145px; /* Etwas breiter, um Sekunden anzuzeigen */
+  padding: 0.2rem 0.3rem; /* Minimales Padding */
+  border-radius: 6px;
+  border: 1px solid #4a5568;
+  background-color: #242830;
+  color: #e8edf5;
+  font-size: 0.8rem; /* Kleinere Schrift */
+  text-align: center;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  flex-shrink: 0; /* Verhindert, dass das Input-Feld schrumpft */
+}
+
+.btn-secondary {
+  width: 28px; /* Feste Breite für den Icon-Button */
+  height: 28px; /* Feste Höhe für den Icon-Button */
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #4a5568;
+  color: #e8edf5;
+  margin: 0; /* Kein oberer Abstand */
+  font-weight: normal;
+  flex-shrink: 0; /* Verhindert, dass der Button schrumpft */
+}
+
+.btn-secondary svg {
+  width: 14px;
+  height: 14px;
+}
+
+.btn-secondary:hover { background-color: #5a677a; }
+
+
+/* ======= START: Alert Start Time & Stopwatch (injected) ======= */
+.timer-card {
+  background: #2f3a47;
+  border: 1px solid #555;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.35);
+}
+
+.timer-card h2 {
+  margin: 0 0 .75rem 0;
+  font-size: 1.05rem;
+  color: #eaeaea;
+}
+
+.timer-row {
+  display: grid;
+  /* Die alte Spaltenaufteilung wird entfernt, damit das Feld die volle Breite nutzen kann. */
+  gap: .75rem;
+}
+
+.timer-label {
+  color: #a0aec0;
+  font-size: .9rem;
+}
+
+.timer-input {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #4a5568;
+  background-color: #242830;
+  color: #e8edf5;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+.timer-input:focus {
+  outline: none;
+  border-color: #53c7ff;
+  box-shadow: 0 0 0 2px rgba(83,199,255,0.3);
+}
+
+.elapsed-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: .6rem;
+  margin-top: .9rem;
+  padding: .6rem .75rem;
+  background: rgba(0,0,0,0.25);
+  border: 1px dashed rgba(255,255,255,.18);
+  border-radius: 10px;
+}
+
+.elapsed-label {
+  color: #a0aec0;
+  font-size: .9rem;
+}
+
+.elapsed-display {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  letter-spacing: .5px;
+  color: #61dafb;
+  font-size: 1.15rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+@media (max-width: 600px) {
+  .timer-row { grid-template-columns: 1fr; }
+}
+/* ======= END: Alert Start Time & Stopwatch (injected) ======= */
+
+.emergency-note {
+  color: pink;
+  font-weight: 300; /* Dünne Schrift */
+  margin-left: 0.75rem; /* Etwas Abstand zur Maßnahme */
+}
+
+.measure-pink { color: pink; }
+
+
+/* Timestamp buttons: no blue outline on focus */
+.timestamp-btn:focus { outline: none; box-shadow: none; }

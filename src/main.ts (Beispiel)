@@ -1,0 +1,24 @@
+
+// ... andere Imports und Code
+
+// Listener für das Dropdown-Menü
+const reimageSelect = document.getElementById('reimage-select') as HTMLSelectElement;
+reimageSelect.addEventListener('change', () => {
+  const selectedValue = reimageSelect.value;
+  console.log('Reimage selection changed:', selectedValue);
+  // Hier die Logik zur Verarbeitung der Auswahl einfügen
+});
+
+// Listener für alle Checkboxen im Context-Formular
+const contextCheckboxes = document.querySelectorAll('#context-info-form input[type="checkbox"]');
+contextCheckboxes.forEach(checkbox => {
+  checkbox.addEventListener('change', () => {
+    const checkedItems = Array.from(contextCheckboxes)
+      .filter(cb => (cb as HTMLInputElement).checked)
+      .map(cb => (cb as HTMLInputElement).value);
+    console.log('Context checkboxes changed:', checkedItems);
+    // Hier die Logik zur Verarbeitung der Checkbox-Auswahl einfügen
+  });
+});
+
+// ... restlicher Code für MITRE ATT&CK etc.

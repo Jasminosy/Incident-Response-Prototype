@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web GUI with TypeScript</title>
+    <link rel="stylesheet" href="src/style.css">
+    <style>
+      /* Stile für die unsichtbare Tabelle in #actions-display */
+      .actions-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed; /* Wichtig, damit die Spaltenbreiten respektiert werden */
+      }
+
+      .actions-table th, .actions-table td {
+        padding: 8px 4px;
+        text-align: left;
+        vertical-align: top; /* Inhalte oben ausrichten */
+        border: none; /* Unsichtbare Ränder */
+        word-wrap: break-word; /* Textumbruch in den Zellen */
+      }
+
+      /* NEU: Flexbox für die erste Spalte, um Umbruch zu verhindern */
+      .actions-table td:first-child {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      /* Spaltenbreiten definieren */
+      .actions-table col.col-1 { width: 15%; } /* Timestamp (noch schmaler) */
+      .actions-table col.col-2 { width: 60%; }  /* Recommended Action */
+      .actions-table col.col-3 { width: 25%; } /* Interaction */
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <h1>Incident Response Playbook</h1>
+
+      <div class="page-container">
+        <!-- Linke Spalte für den Timer -->
+        <div class="sidebar-left">
+          <div class="timer-card">
+            <h2>Alert Start Time</h2>
+            <div class="timer-row">
+              <!-- Das unsichtbare, funktionale Input-Feld -->
+              <input type="datetime-local" id="alert-start" name="alert-start" step="1" class="visually-hidden">
+              <!-- Das sichtbare Anzeige-Feld, das auf Klicks reagiert -->
+              <input type="text" id="alert-start-display" class="timer-input" readonly>
+            </div>
+            <div class="elapsed-wrap">
+              <span class="elapsed-label">Time Elapsed:</span>
+              <span id="elapsed-time" class="elapsed-display">00:00:00</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hauptinhaltsbereich (mittlere Spalte) -->
+        <main id="security-alert-container">
+          <form id="input-form">
+            <div class="form-group">
+              <label for="text-input">Enter MITRE ATT&CK Tactic or Attack Type</label>
+              <input type="text" id="text-input" list="mitre-tactics-list" placeholder="e.g., T1204.002 or Ransomware">
+              <datalist id="mitre-tactics-list">
+              <option value="WannaCry">Ransomware - WannaCry</option>
+              <option value="Lockbit">Ransomware - Lockbit</option>
+              <option value="Conti">Ransomware - Conti</option>
+              <option value="Solar Winds">Supply Chain Attack - SolarWinds</option>
+              <option value="SupplyChainCodeSigning">Supply Chain - compromised build/signing</option>
+              <option value="SCCleaner">Supply Chain - CCleaner style</option>
+              <option value="HOK">Hands on Keyboard Attack</option>
+              <option value="DependencyHijack">Third-party library compromise (npm/pip) / Dependency Hijack</option>
+              <option value="Mirai">DDoS / IoT-Botnet Attack - Mirai</option>
+              <option value="Equifax">Data Exfiltration - Equifax</option>
+              <option value="Brute Force">Brute Force / Credential Stuffing</option>
+              <option value="Insider Threat">Insider Threats</option>
+              <option value="XSS">Cross Site Scripting</option>
+              <option value="SQLi">SQL Injection</option>
+              <option value="Golden">Pass-the-Hash / Kerberos Golden Ticket Attack</option>
+              <option value="Social Engineering">Social Engineering</option>
+              <option value="DNS-Spoofing">DNS Spoofing / Cache Poisoning</option>
+              <option value="TLS Downgrade">HTTPS/SSL-Stripping und TLS-Downgrade</option>
+              <option value="E-Mail MitM">E-Mail-MitM (SMTP/STARTTLS Downgrade)</option>
+              <option value="Session Hijacking">Session Hijacking / Sidejacking</option>
+              <option value="Skeleton Key Attack">Skeleton Key Attack</option>
+              <option value="Excel">Suspicious Microsoft Excel Behavior</option>
+              <option value="Word">Suspicious Microsoft Word Behavior</option>
+              <option value="Account enumeration reconnaissance">Account enumeration reconnaissance</option>
+              <option value="Overpass the has Attack">Overpass the has Attack</option>
+              <option value="Malware Loader">Malware Loader/Dropper</option>
+              <option value="BumbleBee">Malware Loader/Dropper - BumbleBee</option>
+              <option value="C2 Server">Command and Control Server</option>
+              <option value="Business Email Compromise">Business Email Compromise (BEC)</option>
+              <option value="Credential Harvesting">Credential Harvesting / Password Spraying</option>
+              <option value="Account Takeover">Account Takeover / Account Takeover Fraud</option>
+              <option value="Drive-by Download">Drive-by Download / Malvertising</option>
+              <option value="Formjacking">Formjacking / Magecart</option>
+              <option value="Watering Hole">Watering Hole Attack</option>
+              <option value="Zero Day">Zero-Day Exploit</option>
+              <option value="Fileless Malware">Fileless Malware / Living-off-the-Land (LOLBins)</option>
+              <option value="LOLBins">Living off the Land Binaries - e.g. PowerShell, WMI misuse</option>
+              <option value="Webshell">Web Shell / Remote Web Shell Implant</option>
+              <option value="SSRF">Server-Side Request Forgery</option>
+              <option value="XXE">XML External Entity</option>
+              <option value="Deserialization">Insecure Deserialization</option>
+              <option value="SSO/OAuth Abuse">SSO / OAuth Consent Abuse / Token Theft</option>
+              <option value="Cloud Misconfig">Cloud Misconfiguration / Public Bucket Exposure</option>
+              <option value="Container Escape">Container Escape / Kubernetes Compromise</option>
+              <option value="Code Signing Abuse">Code-Signing Abuse / Signed Malware</option>
+              <option value="Dependency Confusion">Supply-Chain: Dependency Confusion / Typosquatting</option>
+              <option value="Firmware Attack">Firmware / UEFI / BIOS Attack</option>
+              <option value="SIM Swap">SIM-Swap / Mobile Account Takeover</option>
+              <option value="Cryptojacking">Cryptojacking / Unauthorised Crypto-Mining</option>
+              <option value="POS Malware">Point-of-Sale (POS) Malware</option>
+              <option value="ATM Malware">ATM / Payment Terminal Malware</option>
+              <option value="Physical Access">Physical Intrusion / Tailgating / Device Theft</option>
+              <option value="Sidechannel">Side-Channel Attack (e.g. Spectre-class)</option>
+              <option value="API Abuse">API Abuse / API Key Exfiltration</option>
+              <option value="Web API Injection">Server-Side Template Injection / API Injection</option>
+              <option value="Formjacking">Formjacking / Client-side Payment Skimming</option>
+              <option value="RAT">Remote Access Trojan (z. B. Gh0st, Remcos)</option>
+              <option value="Gh0st">Remote Access Trojan - Gh0st</option>
+              <option value="Recmos">Remote Access Trojan - Remcos</option>
+              <option value="BEC">Business Email Compromise (separat spezifizieren)</option>
+              <option value="Info Stealer">Info Stealer / Data Exfiltrator</option>
+              <option value="T1001">T1001 - Data Obfuscation</option>
+              <option value="T1001.001">T1001.001 - Data Obfuscation: Junk Data</option>
+              <option value="T1001.002">T1001.002 - Data Obfuscation: Steganography</option>
+              <option value="T1001.003">T1001.003 - Data Obfuscation: Protocol Impersonation</option>
+              <option value="T1003">T1003 - OS Credential Dumping</option>
+              <option value="T1003.001">T1003.001 - OS Credential Dumping: LSASS Memory</option>
+              <option value="T1003.002">T1003.002 - OS Credential Dumping: Security Account Manager</option>
+              <option value="T1003.003">T1003.003 - OS Credential Dumping: NTDS</option>
+              <option value="T1003.004">T1003.004 - OS Credential Dumping: LSA Secrets</option>
+              <option value="T1003.005">T1003.005 - OS Credential Dumping: Cached Domain Credentials</option>
+              <option value="T1003.006">T1003.006 - OS Credential Dumping: DCSync</option>
+              <option value="T1003.007">T1003.007 - OS Credential Dumping: Proc Filesystem</option>
+              <option value="T1003.008">T1003.008 - OS Credential Dumping: /etc/passwd and /etc/shadow</option>
+              <option value="T1011">T1011 - Exfiltration Over Other Network Medium</option>
+              <option value="T1011.001">T1011.001 - Exfiltration Over Other Network Medium: Exfiltration Over Bluetooth</option>
+              <option value="T1016">T1016 - System Network Configuration Discovery</option>
+              <option value="T1016.001">T1016.001 - System Network Configuration Discovery: Internet Connection Discovery</option>
+              <option value="T1016.002">T1016.002 - System Network Configuration Discovery: Wi-Fi Discovery</option>
+              <option value="T1020">T1020 - Automated Exfiltration</option>
+              <option value="T1020.001">T1020.001 - Automated Exfiltration: Traffic Duplication</option>
+              <option value="T1021">T1021 - Remote Services</option>
+              <option value="T1021.001">T1021.001 - Remote Services: Remote Desktop Protocol</option>
+              <option value="T1021.002">T1021.002 - Remote Services: SMB/Windows Admin Shares</option>
+              <option value="T1021.003">T1021.003 - Remote Services: Distributed Component Object Model</option>
+              <option value="T1021.004">T1021.004 - Remote Services: SSH</option>
+              <option value="T1021.005">T1021.005 - Remote Services: VNC</option>
+              <option value="T1021.006">T1021.006 - Remote Services: Windows Remote Management</option>
+              <option value="T1021.007">T1021.007 - Remote Services: Cloud Services</option>
+              <option value="T1021.008">T1021.008 - Remote Services: Radmin</option>
+              <option value="T1027">T1027 - Obfuscated Files or Information</option>
+              <option value="T1027.001">T1027.001 - Obfuscated Files or Information: Binary Padding</option>
+              <option value="T1027.002">T1027.002 - Obfuscated Files or Information: Software Packing</option>
+              <option value="T1027.003">T1027.003 - Obfuscated Files or Information: Steganography</option>
+              <option value="T1027.004">T1027.004 - Obfuscated Files or Information: Compile After Delivery</option>
+              <option value="T1027.005">T1027.005 - Obfuscated Files or Information: Indicator Removal from Tools</option>
+              <option value="T1027.006">T1027.006 - Obfuscated Files or Information: HTML Smuggling</option>
+              <option value="T1027.007">T1027.007 - Obfuscated Files or Information: Plist File Modification</option>
+              <option value="T1027.008">T1027.008 - Obfuscated Files or Information: Stripped Payloads</option>
+              <option value="T1027.009">T1027.009 - Obfuscated Files or Information: Embedded Payloads</option>
+              <option value="T1027.010">T1027.010 - Obfuscated Files or Information: Command Obfuscation</option>
+              <option value="T1027.011">T1027.011 - Obfuscated Files or Information: Fileless Storage</option>
+              <option value="T1027.012">T1027.012 - Obfuscated Files or Information: Symbolic Links</option>
+              <option value="T1027.013">T1027.013 - Obfuscated Files or Information: Encrypted/Encoded File</option>
+              <option value="T1027.014">T1027.014 - Obfuscated Files or Information: Process Argument Obfuscation</option>
+              <option value="T1027.015">T1027.015 - Obfuscated Files or Information: Process Ghosting</option>
+              <option value="T1027.016">T1027.016 - Obfuscated Files or Information: Process Doppelgänging</option>
+              <option value="T1027.017">T1027.017 - Obfuscated Files or Information: Process Herpaderping</option>
+              <option value="T1030">T1030 - Data Transfer Size Limits</option>
+              <option value="T1036">T1036 - Masquerading</option>
+              <option value="T1036.001">T1036.001 - Masquerading: Invalid Code Signature</option>
+              <option value="T1036.002">T1036.002 - Masquerading: Right-to-Left Override</option>
+              <option value="T1036.003">T1036.003 - Masquerading: Rename System Utilities</option>
+              <option value="T1036.004">T1036.004 - Masquerading: Masquerade Task or Service</option>
+              <option value="T1036.005">T1036.005 - Masquerading: Match Legitimate Name or Location</option>
+              <option value="T1036.006">T1036.006 - Masquerading: Space after Filename</option>
+              <option value="T1036.007">T1036.007 - Masquerading: Double File Extension</option>
+              <option value="T1036.008">T1036.008 - Masquerading: Masquerade File Type</option>
+              <option value="T1036.009">T1036.009 - Masquerading: Break Process Trees</option>
+              <option value="T1036.010">T1036.010 - Masquerading: Hidden Users</option>
+              <option value="T1036.011">T1036.011 - Masquerading: Masquerade Parent Process</option>
+              <option value="T1037">T1037 - Boot or Logon Initialization Scripts</option>
+              <option value="T1037.001">T1037.001 - Boot or Logon Initialization Scripts: Logon Script (Windows)</option>
+              <option value="T1037.002">T1037.002 - Boot or Logon Initialization Scripts: Logon Script (Mac)</option>
+              <option value="T1037.003">T1037.003 - Boot or Logon Initialization Scripts: Network Logon Script</option>
+              <option value="T1037.004">T1037.004 - Boot or Logon Initialization Scripts: Rc.common</option>
+              <option value="T1037.005">T1037.005 - Boot or Logon Initialization Scripts: Startup Items</option>
+              <option value="T1048">T1048 - Exfiltration Over Alternative Protocol</option>
+              <option value="T1048.001">T1048.001 - Exfiltration Over Alternative Protocol: Exfiltration Over Symmetric Encrypted Non-C2 Protocol</option>
+              <option value="T1048.002">T1048.002 - Exfiltration Over Alternative Protocol: Exfiltration Over Asymmetric Encrypted Non-C2 Protocol</option>
+              <option value="T1048.003">T1048.003 - Exfiltration Over Alternative Protocol: Exfiltration Over Unencrypted/Obfuscated Non-C2 Protocol</option>
+              <option value="T1052">T1052 - Exfiltration Over Physical Medium</option>
+              <option value="T1052.001">T1052.001 - Exfiltration Over Physical Medium: Exfiltration over USB</option>
+              <option value="T1053">T1053 - Scheduled Task/Job</option>
+              <option value="T1053.001">T1053.001 - Scheduled Task/Job: At (Linux)</option>
+              <option value="T1053.002">T1053.002 - Scheduled Task/Job: At (Windows)</option>
+              <option value="T1053.003">T1053.003 - Scheduled Task/Job: Cron</option>
+              <option value="T1053.004">T1053.004 - Scheduled Task/Job: Launchd</option>
+              <option value="T1053.005">T1053.005 - Scheduled Task/Job: Scheduled Task</option>
+              <option value="T1053.006">T1053.006 - Scheduled Task/Job: Systemd Timers</option>
+              <option value="T1053.007">T1053.007 - Scheduled Task/Job: Container Orchestration Job</option>
+              <option value="T1055">T1055 - Process Injection</option>
+              <option value="T1055.001">T1055.001 - Process Injection: Dynamic-link Library Injection</option>
+              <option value="T1055.002">T1055.002 - Process Injection: Portable Executable Injection</option>
+              <option value="T1055.003">T1055.003 - Process Injection: Thread Execution Hijacking</option>
+              <option value="T1055.004">T1055.004 - Process Injection: Asynchronous Procedure Call</option>
+              <option value="T1055.005">T1055.005 - Process Injection: Thread Local Storage</option>
+              <option value="T1055.008">T1055.008 - Process Injection: Ptrace System Calls</option>
+              <option value="T1055.009">T1055.009 - Process Injection: Proc Memory</option>
+              <option value="T1055.011">T1055.011 - Process Injection: Extra Window Memory Injection</option>
+              <option value="T1055.012">T1055.012 - Process Injection: Process Hollowing</option>
+              <option value="T1055.013">T1055.013 - Process Injection: Process Doppelgänging</option>
+              <option value="T1055.014">T1055.014 - Process Injection: VDSO Hijacking</option>
+              <option value="T1055.015">T1055.015 - Process Injection: List-view Injection</option>
+              <option value="T1056">T1056 - Input Capture</option>
+              <option value="T1056.001">T1056.001 - Input Capture: Keylogging</option>
+              <option value="T1056.002">T1056.002 - Input Capture: GUI Input Capture</option>
+              <option value="T1056.003">T1056.003 - Input Capture: Web Session Cookie Theft</option>
+              <option value="T1056.004">T1056.004 - Input Capture: Credential API Hooking</option>
+              <option value="T1059">T1059 - Command and Scripting Interpreter</option>
+              <option value="T1059.001">T1059.001 - Command and Scripting Interpreter: PowerShell</option>
+              <option value="T1059.002">T1059.002 - Command and Scripting Interpreter: AppleScript</option>
+              <option value="T1059.003">T1059.003 - Command and Scripting Interpreter: Windows Command Shell</option>
+              <option value="T1059.004">T1059.004 - Command and Scripting Interpreter: Unix Shell</option>
+              <option value="T1059.005">T1059.005 - Command and Scripting Interpreter: Visual Basic</option>
+              <option value="T1059.006">T1059.006 - Command and Scripting Interpreter: Python</option>
+              <option value="T1059.007">T1059.007 - Command and Scripting Interpreter: JavaScript</option>
+              <option value="T1059.008">T1059.008 - Command and Scripting Interpreter: Network Device CLI</option>
+              <option value="T1059.009">T1059.009 - Command and Scripting Interpreter: Cloud API</option>
+              <option value="T1059.010">T1059.010 - Command and Scripting Interpreter: Tcl</option>
+              <option value="T1059.011">T1059.011 - Command and Scripting Interpreter: Mof</option>
+              <option value="T1059.012">T1059.012 - Command and Scripting Interpreter: XSL script</option>
+              <option value="T1069">T1069 - Permission Groups Discovery</option>
+              <option value="T1069.001">T1069.001 - Permission Groups Discovery: Local Groups</option>
+              <option value="T1069.002">T1069.002 - Permission Groups Discovery: Domain Groups</option>
+              <option value="T1069.003">T1069.003 - Permission Groups Discovery: Cloud Groups</option>
+              <option value="T1070">T1070 - Indicator Removal</option>
+              <option value="T1070.001">T1070.001 - Indicator Removal: Clear Windows Event Logs</option>
+              <option value="T1070.002">T1070.002 - Indicator Removal: Clear Linux or Mac System Logs</option>
+              <option value="T1070.003">T1070.003 - Indicator Removal: Clear Command History</option>
+              <option value="T1070.004">T1070.004 - Indicator Removal: File Deletion</option>
+              <option value="T1070.005">T1070.005 - Indicator Removal: Network Share Connection Removal</option>
+              <option value="T1070.006">T1070.006 - Indicator Removal: Timestomp</option>
+              <option value="T1070.007">T1070.007 - Indicator Removal: Clear Network Connection History and Configurations</option>
+              <option value="T1070.008">T1070.008 - Indicator Removal: Clear Mailbox Data</option>
+              <option value="T1070.009">T1070.009 - Indicator Removal: Clear Persistence</option>
+              <option value="T1070.010">T1070.010 - Indicator Removal: Clear Stored Credentials</option>
+              <option value="T1071">T1071 - Application Layer Protocol</option>
+              <option value="T1071.001">T1071.001 - Application Layer Protocol: Web Protocols</option>
+              <option value="T1071.002">T1071.002 - Application Layer Protocol: File Transfer Protocols</option>
+              <option value="T1071.003">T1071.003 - Application Layer Protocol: Mail Protocols</option>
+              <option value="T1071.004">T1071.004 - Application Layer Protocol: DNS</option>
+              <option value="T1071.005">T1071.005 - Application Layer Protocol: Telnet</option>
+              <option value="T1074">T1074 - Data Staged</option>
+              <option value="T1074.001">T1074.001 - Data Staged: Local Data Staging</option>
+              <option value="T1074.002">T1074.002 - Data Staged: Remote Data Staging</option>
+              <option value="T1078">T1078 - Valid Accounts</option>
+              <option value="T1078.001">T1078.001 - Valid Accounts: Default Accounts</option>
+              <option value="T1078.002">T1078.002 - Valid Accounts: Domain Accounts</option>
+              <option value="T1078.003">T1078.003 - Valid Accounts: Local Accounts</option>
+              <option value="T1078.004">T1078.004 - Valid Accounts: Cloud Accounts</option>
+              <option value="T1087">T1087 - Account Discovery</option>
+              <option value="T1087.001">T1087.001 - Account Discovery: Local Account</option>
+              <option value="T1087.002">T1087.002 - Account Discovery: Domain Account</option>
+              <option value="T1087.003">T1087.003 - Account Discovery: Email Account</option>
+              <option value="T1087.004">T1087.004 - Account Discovery: Cloud Account</option>
+              <option value="T1090">T1090 - Proxy</option>
+              <option value="T1090.001">T1090.001 - Proxy: Domain Fronting</option>
+              <option value="T1090.002">T1090.002 - Proxy: External Proxy</option>
+              <option value="T1090.003">T1090.003 - Proxy: Multi-hop Proxy</option>
+              <option value="T1090.004">T1090.004 - Proxy: Domestic Proxy</option>
+              <option value="T1098">T1098 - Account Manipulation</option>
+              <option value="T1098.001">T1098.001 - Account Manipulation: Additional Cloud Credentials</option>
+              <option value="T1098.002">T1098.002 - Account Manipulation: Exchange Email Delegate Permissions</option>
+              <option value="T1098.003">T1098.003 - Account Manipulation: Add Office 365 Global Administrator Role</option>
+              <option value="T1098.004">T1098.004 - Account Manipulation: SSH Authorized Keys</option>
+              <option value="T1098.005">T1098.005 - Account Manipulation: Device Registration</option>
+              <option value="T1098.006">T1098.006 - Account Manipulation: Additional Container Cluster Roles</option>
+              <option value="T1098.007">T1098.007 - Account Manipulation: Additional Cloud Roles</option>
+              <option value="T1102">T1102 - Web Service</option>
+              <option value="T1102.001">T1102.001 - Web Service: Dead Drop Resolver</option>
+              <option value="T1102.002">T1102.002 - Web Service: Bidirectional Communication</option>
+              <option value="T1102.003">T1102.003 - Web Service: One-Way Communication</option>
+              <option value="T1110">T1110 - Brute Force</option>
+              <option value="T1110.001">T1110.001 - Brute Force: Password Guessing</option>
+              <option value="T1110.002">T1110.002 - Brute Force: Password Cracking</option>
+              <option value="T1110.003">T1110.003 - Brute Force: Password Spraying</option>
+              <option value="T1110.004">T1110.004 - Brute Force: Credential Stuffing</option>
+              <option value="T1114">T1114 - Email Collection</option>
+              <option value="T1114.001">T1114.001 - Email Collection: Local Email Collection</option>
+              <option value="T1114.002">T1114.002 - Email Collection: Remote Email Collection</option>
+              <option value="T1114.003">T1114.003 - Email Collection: Mailbox Manipulation</option>
+              <option value="T1127">T1127 - Trusted Developer Utilities Proxy Execution</option>
+              <option value="T1127.001">T1127.001 - Trusted Developer Utilities Proxy Execution: MSBuild</option>
+              <option value="T1127.002">T1127.002 - Trusted Developer Utilities Proxy Execution: DNX</option>
+              <option value="T1127.003">T1127.003 - Trusted Developer Utilities Proxy Execution: RCSI</option>
+              <option value="T1132">T1132 - Data Encoding</option>
+              <option value="T1132.001">T1132.001 - Data Encoding: Standard Encoding</option>
+              <option value="T1132.002">T1132.002 - Data Encoding: Non-Standard Encoding</option>
+              <option value="T1134">T1134 - Access Token Manipulation</option>
+              <option value="T1134.001">T1134.001 - Access Token Manipulation: Token Impersonation/Theft</option>
+              <option value="T1134.002">T1134.002 - Access Token Manipulation: Create Process with Token</option>
+              <option value="T1134.003">T1134.003 - Access Token Manipulation: Make and Impersonate Token</option>
+              <option value="T1134.004">T1134.004 - Access Token Manipulation: Parent PID Spoofing</option>
+              <option value="T1134.005">T1134.005 - Access Token Manipulation: SID-History Injection</option>
+              <option value="T1136">T1136 - Create Account</option>
+              <option value="T1136.001">T1136.001 - Create Account: Local Account</option>
+              <option value="T1136.002">T1136.002 - Create Account: Domain Account</option>
+              <option value="T1136.003">T1136.003 - Create Account: Cloud Account</option>
+              <option value="T1137">T1137 - Office Application Startup</option>
+              <option value="T1137.001">T1137.001 - Office Application Startup: Office Template Macros</option>
+              <option value="T1137.002">T1137.002 - Office Application Startup: Office Test</option>
+              <option value="T1137.003">T1137.003 - Office Application Startup: Outlook Forms</option>
+              <option value="T1137.004">T1137.004 - Office Application Startup: Outlook Rules</option>
+              <option value="T1137.005">T1137.005 - Office Application Startup: Outlook Home Page</option>
+              <option value="T1137.006">T1137.006 - Office Application Startup: Add-ins</option>
+              <option value="T1176">T1176 - Browser Extensions</option>
+              <option value="T1176.001">T1176.001 - Browser Extensions: Malicious Extension</option>
+              <option value="T1176.002">T1176.002 - Browser Extensions: Hostile Extension</option>
+              <option value="T1195">T1195 - Supply Chain Compromise</option>
+              <option value="T1195.001">T1195.001 - Supply Chain Compromise: Compromise Software Dependencies and Development Tools</option>
+              <option value="T1195.002">T1195.002 - Supply Chain Compromise: Compromise Software Supply Chain</option>
+              <option value="T1195.003">T1195.003 - Supply Chain Compromise: Compromise Hardware Supply Chain</option>
+              <option value="T1204">T1204 - User Execution</option>
+              <option value="T1204.001">T1204.001 - User Execution: Malicious Link</option>
+              <option value="T1204.002">T1204.002 - User Execution: Malicious File</option>
+              <option value="T1204.003">T1204.003 - User Execution: Malicious Image</option>
+              <option value="T1204.004">T1204.004 - User Execution: Malicious Physical Media</option>
+              <option value="T1205">T1205 - Traffic Signaling</option>
+              <option value="T1205.001">T1205.001 - Traffic Signaling: Port Knocking</option>
+              <option value="T1205.002">T1205.002 - Traffic Signaling: Socket Filters</option>
+              <option value="T1213">T1213 - Data from Information Repositories</option>
+              <option value="T1213.001">T1213.001 - Data from Information Repositories: Confluence</option>
+              <option value="T1213.002">T1213.002 - Data from Information Repositories: Sharepoint</option>
+              <option value="T1213.003">T1213.003 - Data from Information Repositories: Code Repositories</option>
+              <option value="T1213.004">T1213.004 - Data from Information Repositories: OneNote</option>
+              <option value="T1213.005">T1213.005 - Data from Information Repositories: Internal Defenses</option>
+              <option value="T1216">T1216 - Signed Script Proxy Execution</option>
+              <option value="T1216.001">T1216.001 - Signed Script Proxy Execution: PubPrn</option>
+              <option value="T1216.002">T1216.002 - Signed Script Proxy Execution: SyncAppvPublishingServer</option>
+              <option value="T1218">T1218 - System Binary Proxy Execution</option>
+              <option value="T1218.001">T1218.001 - System Binary Proxy Execution: Compiled HTML File</option>
+              <option value="T1218.002">T1218.002 - System Binary Proxy Execution: Control Panel Item</option>
+              <option value="T1218.003">T1218.003 - System Binary Proxy Execution: CMSTP</option>
+              <option value="T1218.004">T1218.004 - System Binary Proxy Execution: InstallUtil</option>
+              <option value="T1218.005">T1218.005 - System Binary Proxy Execution: Mshta</option>
+              <option value="T1218.007">T1218.007 - System Binary Proxy Execution: Regsvcs/Regasm</option>
+              <option value="T1218.008">T1218.008 - System Binary Proxy Execution: Odbcconf</option>
+              <option value="T1218.009">T1218.009 - System Binary Proxy Execution: Regasm</option>
+              <option value="T1218.010">T1218.010 - System Binary Proxy Execution: Regsvr32</option>
+              <option value="T1218.011">T1218.011 - System Binary Proxy Execution: Rundll32</option>
+              <option value="T1218.012">T1218.012 - System Binary Proxy Execution: Verclsid</option>
+              <option value="T1218.013">T1218.013 - System Binary Proxy Execution: Mavinject</option>
+              <option value="T1218.014">T1218.014 - System Binary Proxy Execution: MMC</option>
+              <option value="T1218.015">T1218.015 - System Binary Proxy Execution: Presentationhost</option>
+              <option value="T1219">T1219 - Remote Access Software</option>
+              <option value="T1219.001">T1219.001 - Remote Access Software: Internal Spearfishing</option>
+              <option value="T1219.002">T1219.002 - Remote Access Software: External Remote Services</option>
+              <option value="T1219.003">T1219.003 - Remote Access Software: Cloud-based Remote Access Tools</option>
+              <option value="T1222">T1222 - File and Directory Permissions Modification</option>
+              <option value="T1222.001">T1222.001 - File and Directory Permissions Modification: Windows File and Directory Permissions Modification</option>
+              <option value="T1222.002">T1222.002 - File and Directory Permissions Modification: Linux and Mac File and Directory Permissions Modification</option>
+              <option value="T1480">T1480 - Execution Guardrails</option>
+              <option value="T1480.001">T1480.001 - Execution Guardrails: Environmental Keying</option>
+              <option value="T1480.002">T1480.002 - Execution Guardrails: Sandboxing</option>
+              <option value="T1484">T1484 - Domain Policy Modification</option>
+              <option value="T1484.001">T1484.001 - Domain Policy Modification: Group Policy Modification</option>
+              <option value="T1484.002">T1484.002 - Domain Policy Modification: Domain Trust Modification</option>
+              <option value="T1485">T1485 - Data Destruction</option>
+              <option value="T1485.001">T1485.001 - Data Destruction: Data from Local System</option>
+              <option value="T1486">T1486 - Data Encrypted for Impact / Ransomware</option>
+              <option value="T1491">T1491 - Defacement</option>
+              <option value="T1491.001">T1491.001 - Defacement: Internal Defacement</option>
+              <option value="T1491.002">T1491.002 - Defacement: External Defacement</option>
+              <option value="T1496">T1496 - Resource Hijacking</option>
+              <option value="T1496.001">T1496.001 - Resource Hijacking: Cloud Instance</option>
+              <option value="T1496.002">T1496.002 - Resource Hijacking: Container</option>
+              <option value="T1496.003">T1496.003 - Resource Hijacking: Virtual Machine</option>
+              <option value="T1496.004">T1496.004 - Resource Hijacking: Systemd Service</option>
+              <option value="T1497">T1497 - Virtualization/Sandbox Evasion</option>
+              <option value="T1497.001">T1497.001 - Virtualization/Sandbox Evasion: System Checks</option>
+              <option value="T1497.002">T1497.002 - Virtualization/Sandbox Evasion: User Activity Based Checks</option>
+              <option value="T1497.003">T1497.003 - Virtualization/Sandbox Evasion: Time Based Evasion</option>
+              <option value="T1498">T1498 - Network Denial of Service</option>
+              <option value="T1498.001">T1498.001 - Network Denial of Service: Direct Network Flood</option>
+              <option value="T1498.002">T1498.002 - Network Denial of Service: Reflected Network Flood</option>
+              <option value="T1499">T1499 - Endpoint Denial of Service</option>
+              <option value="T1499.001">T1499.001 - Endpoint Denial of Service: OS Exhaustion Flood</option>
+              <option value="T1499.002">T1499.002 - Endpoint Denial of Service: Service Exhaustion Flood</option>
+              <option value="T1499.003">T1499.003 - Endpoint Denial of Service: Application Exhaustion Flood</option>
+              <option value="T1499.004">T1499.004 - Endpoint Denial of Service: System Shutdown/Reboot</option>
+              <option value="T1505">T1505 - Server Software Component</option>
+              <option value="T1505.001">T1505.001 - Server Software Component: SQL Stored Procedures</option>
+              <option value="T1505.002">T1505.002 - Server Software Component: Transport Agent</option>
+              <option value="T1505.003">T1505.003 - Server Software Component: Web Shell</option>
+              <option value="T1505.004">T1505.004 - Server Software Component: IIS Components</option>
+              <option value="T1505.005">T1505.005 - Server Software Component: Terminal Services DLL</option>
+              <option value="T1505.006">T1505.006 - Server Software Component: Network Device Firmware</option>
+              <option value="T1518">T1518 - Software Discovery</option>
+              <option value="T1518.001">T1518.001 - Software Discovery: Security Software Discovery</option>
+              <option value="T1542">T1542 - Pre-OS Boot</option>
+              <option value="T1542.001">T1542.001 - Pre-OS Boot: System Firmware</option>
+              <option value="T1542.002">T1542.002 - Pre-OS Boot: Component Firmware</option>
+              <option value="T1542.003">T1542.003 - Pre-OS Boot: Bootkit</option>
+              <option value="T1542.004">T1542.004 - Pre-OS Boot: ROMMONkit</option>
+              <option value="T1542.005">T1542.005 - Pre-OS Boot: TFTP Boot</option>
+              <option value="T1543">T1543 - Create or Modify System Process</option>
+              <option value="T1543.001">T1543.001 - Create or Modify System Process: Launch Agent</option>
+              <option value="T1543.002">T1543.002 - Create or Modify System Process: Systemd Service</option>
+              <option value="T1543.003">T1543.003 - Create or Modify System Process: Windows Service</option>
+              <option value="T1543.004">T1543.004 - Create or Modify System Process: Launch Daemon</option>
+              <option value="T1543.005">T1543.005 - Create or Modify System Process: Startup Items</option>
+              <option value="T1546">T1546 - Event Triggered Execution</option>
+              <option value="T1546.001">T1546.001 - Event Triggered Execution: Change Default File Association</option>
+              <option value="T1546.002">T1546.002 - Event Triggered Execution: Screensaver</option>
+              <option value="T1546.003">T1546.003 - Event Triggered Execution: Windows Management Instrumentation Event Subscription</option>
+              <option value="T1546.004">T1546.004 - Event Triggered Execution: .bash_profile and .bashrc</option>
+              <option value="T1546.005">T1546.005 - Event Triggered Execution: Trap</option>
+              <option value="T1546.006">T1546.006 - Event Triggered Execution: LC_LOAD_DYLIBS</option>
+              <option value="T1546.007">T1546.007 - Event Triggered Execution: Netsh Helper DLL</option>
+              <option value="T1546.008">T1546.008 - Event Triggered Execution: Accessibility Features</option>
+              <option value="T1546.009">T1546.009 - Event Triggered Execution: AppCert DLLs</option>
+              <option value="T1546.010">T1546.010 - Event Triggered Execution: AppInit DLLs</option>
+              <option value="T1546.011">T1546.011 - Event Triggered Execution: Application Shimming</option>
+              <option value="T1546.012">T1546.012 - Event Triggered Execution: Image File Execution Options Injection</option>
+              <option value="T1546.013">T1546.013 - Event Triggered Execution: PowerShell Profile</option>
+              <option value="T1546.014">T1546.014 - Event Triggered Execution: Emond</option>
+              <option value="T1546.015">T1546.015 - Event Triggered Execution: Component Object Model Hijacking</option>
+              <option value="T1546.016">T1546.016 - Event Triggered Execution: Plist Modification</option>
+              <option value="T1546.017">T1546.017 - Event Triggered Execution: Kernel Modules and Extensions</option>
+              <option value="T1547">T1547 - Boot or Logon Autostart Execution</option>
+              <option value="T1547.001">T1547.001 - Boot or Logon Autostart Execution: Registry Run Keys / Startup Folder</option>
+              <option value="T1547.002">T1547.002 - Boot or Logon Autostart Execution: Authentication Package</option>
+              <option value="T1547.003">T1547.003 - Boot or Logon Autostart Execution: Time Providers</option>
+              <option value="T1547.004">T1547.004 - Boot or Logon Autostart Execution: Winlogon Helper DLL</option>
+              <option value="T1547.005">T1547.005 - Boot or Logon Autostart Execution: Browser Extensions</option>
+              <option value="T1547.006">T1547.006 - Boot or Logon Autostart Execution: Kernel Modules and Extensions</option>
+              <option value="T1547.007">T1547.007 - Boot or Logon Autostart Execution: Re-opened Applications</option>
+              <option value="T1547.008">T1547.008 - Boot or Logon Autostart Execution: LSASS Driver</option>
+              <option value="T1547.009">T1547.009 - Boot or Logon Autostart Execution: Shortcut Modification</option>
+              <option value="T1547.010">T1547.010 - Boot or Logon Autostart Execution: Port Monitors</option>
+              <option value="T1547.011">T1547.011 - Boot or Logon Autostart Execution: Plist Modification</option>
+              <option value="T1547.012">T1547.012 - Boot or Logon Autostart Execution: Print Processors</option>
+              <option value="T1547.013">T1547.013 - Boot or Logon Autostart Execution: XDG Autostart Entries</option>
+              <option value="T1547.014">T1547.014 - Boot or Logon Autostart Execution: Active Setup</option>
+              <option value="T1547.015">T1547.015 - Boot or Logon Autostart Execution: Login Items</option>
+              <option value="T1548">T1548 - Abuse Elevation Control Mechanism</option>
+              <option value="T1548.001">T1548.001 - Abuse Elevation Control Mechanism: Setuid and Setgid</option>
+              <option value="T1548.002">T1548.002 - Abuse Elevation Control Mechanism: Bypass User Account Control</option>
+              <option value="T1548.003">T1548.003 - Abuse Elevation Control Mechanism: Sudo and Sudo Caching</option>
+              <option value="T1548.004">T1548.004 - Abuse Elevation Control Mechanism: Elevated Execution with GUI API</option>
+              <option value="T1548.005">T1548.005 - Abuse Elevation Control Mechanism: Temporary Root</option>
+              <option value="T1548.006">T1548.006 - Abuse Elevation Control Mechanism: TCC Manipulation</option>
+              <option value="T1550">T1550 - Use Alternate Authentication Material</option>
+              <option value="T1550.001">T1550.001 - Use Alternate Authentication Material: Application Access Token</option>
+              <option value="T1550.002">T1550.002 - Use Alternate Authentication Material: Pass the Hash</option>
+              <option value="T1550.003">T1550.003 - Use Alternate Authentication Material: Pass the Ticket</option>
+              <option value="T1550.004">T1550.004 - Use Alternate Authentication Material: Web Session Cookie</option>
+              <option value="T1552">T1552 - Unsecured Credentials</option>
+              <option value="T1552.001">T1552.001 - Unsecured Credentials: Credentials in Files</option>
+              <option value="T1552.002">T1552.002 - Unsecured Credentials: Credentials in Registry</option>
+              <option value="T1552.003">T1552.003 - Unsecured Credentials: Bash History</option>
+              <option value="T1552.004">T1552.004 - Unsecured Credentials: Private Keys</option>
+              <option value="T1552.005">T1552.005 - Unsecured Credentials: Cloud Instance Metadata API</option>
+              <option value="T1552.006">T1552.006 - Unsecured Credentials: Group Policy Preferences</option>
+              <option value="T1552.007">T1552.007 - Unsecured Credentials: Reversible Encryption</option>
+              <option value="T1552.008">T1552.008 - Unsecured Credentials: Steal or Forge Kerberos Tickets</option>
+              <option value="T1553">T1553 - Subvert Trust Controls</option>
+              <option value="T1553.001">T1553.001 - Subvert Trust Controls: Gatekeeper Bypass</option>
+              <option value="T1553.002">T1553.002 - Subvert Trust Controls: Code Signing</option>
+              <option value="T1553.003">T1553.003 - Subvert Trust Controls: SIP and Trustd Bypass</option>
+              <option value="T1553.004">T1553.004 - Subvert Trust Controls: Install Root Certificate</option>
+              <option value="T1553.005">T1553.005 - Subvert Trust Controls: Mark-of-the-Web Bypass</option>
+              <option value="T1553.006">T1553.006 - Subvert Trust Controls: Code Signing Policy Modification</option>
+              <option value="T1555">T1555 - Credentials from Password Stores</option>
+              <option value="T1555.001">T1555.001 - Credentials from Password Stores: Keychain</option>
+              <option value="T1555.002">T1555.002 - Credentials from Password Stores: Securityd Memory</option>
+              <option value="T1555.003">T1555.003 - Credentials from Password Stores: Credentials from Web Browsers</option>
+              <option value="T1555.004">T1555.004 - Credentials from Password Stores: Windows Credential Manager</option>
+              <option value="T1555.005">T1555.005 - Credentials from Password Stores: Password Managers</option>
+              <option value="T1555.006">T1555.006 - Credentials from Password Stores: Cloud Secrets Management Stores</option>
+              <option value="T1556">T1556 - Modify Authentication Process</option>
+              <option value="T1556.001">T1556.001 - Modify Authentication Process: Domain Controller Authentication</option>
+              <option value="T1556.002">T1556.002 - Modify Authentication Process: Password Filter DLL</option>
+              <option value="T1556.003">T1556.003 - Modify Authentication Process: Pluggable Authentication Modules</option>
+              <option value="T1556.004">T1556.004 - Modify Authentication Process: Network Provider DLL</option>
+              <option value="T1556.005">T1556.005 - Modify Authentication Process: Reversible Encryption</option>
+              <option value="T1556.006">T1556.006 - Modify Authentication Process: Multi-Factor Authentication</option>
+              <option value="T1556.007">T1556.007 - Modify Authentication Process: Hybrid Identity</option>
+              <option value="T1556.008">T1556.008 - Modify Authentication Process: Network Device Authentication</option>
+              <option value="T1556.009">T1556.009 - Modify Authentication Process: Conditional Access Policies</option>
+              <option value="T1557">T1557 - Adversary-in-the-Middle</option>
+              <option value="T1557.001">T1557.001 - Adversary-in-the-Middle: LLMNR/NBT-NS Poisoning and SMB Relay</option>
+              <option value="T1557.002">T1557.002 - Adversary-in-the-Middle: ARP Cache Poisoning</option>
+              <option value="T1557.003">T1557.003 - Adversary-in-the-Middle: DHCP Spoofing</option>
+              <option value="T1557.004">T1557.004 - Adversary-in-the-Middle: Evil Twin</option>
+              <option value="T1558">T1558 - Steal or Forge Kerberos Tickets</option>
+              <option value="T1558.001">T1558.001 - Steal or Forge Kerberos Tickets: Golden Ticket</option>
+              <option value="T1558.002">T1558.002 - Steal or Forge Kerberos Tickets: Silver Ticket</option>
+              <option value="T1558.003">T1558.003 - Steal or Forge Kerberos Tickets: Kerberoasting</option>
+              <option value="T1558.004">T1558.004 - Steal or Forge Kerberos Tickets: AS-REP Roasting</option>
+              <option value="T1558.005">T1558.005 - Steal or Forge Kerberos Tickets: Ticket Granting Ticket (TGT) Abuse / Ccache Files</option>
+              <option value="T1559">T1559 - Inter-Process Communication</option>
+              <option value="T1559.001">T1559.001 - Inter-Process Communication: Component Object Model</option>
+              <option value="T1559.002">T1559.002 - Inter-Process Communication: Dynamic Data Exchange</option>
+              <option value="T1559.003">T1559.003 - Inter-Process Communication: Windows Management Instrumentation</option>
+              <option value="T1560">T1560 - Archive Collected Data</option>
+              <option value="T1560.001">T1560.001 - Archive Collected Data: Archive via Utility</option>
+              <option value="T1560.002">T1560.002 - Archive Collected Data: Archive via Library</option>
+              <option value="T1560.003">T1560.003 - Archive Collected Data: Archive via Custom Method</option>
+              <option value="T1561">T1561 - Disk Wipe</option>
+              <option value="T1561.001">T1561.001 - Disk Wipe: Disk Content Wipe</option>
+              <option value="T1561.002">T1561.002 - Disk Wipe: Disk Structure Wipe</option>
+              <option value="T1562">T1562 - Impair Defenses</option>
+              <option value="T1562.001">T1562.001 - Impair Defenses: Disable or Modify Tools</option>
+              <option value="T1562.002">T1562.002 - Impair Defenses: Disable Windows Event Logging</option>
+              <option value="T1562.003">T1562.003 - Impair Defenses: Impair Command History Logging</option>
+              <option value="T1562.004">T1562.004 - Impair Defenses: Disable or Modify System Firewall</option>
+              <option value="T1562.006">T1562.006 - Impair Defenses: Indicator Blocking</option>
+              <option value="T1562.007">T1562.007 - Impair Defenses: Disable or Modify Cloud Firewall</option>
+              <option value="T1562.008">T1562.008 - Impair Defenses: Disable or Modify Cloud Logs</option>
+              <option value="T1562.009">T1562.009 - Impair Defenses: Safe Mode Boot</option>
+              <option value="T1562.010">T1562.010 - Impair Defenses: Downgrade Attack</option>
+              <option value="T1562.011">T1562.011 - Impair Defenses: Disable or Modify Cloud Service Configurations</option>
+              <option value="T1562.012">T1562.012 - Impair Defenses: Disable or Modify Certificate Validation</option>
+              <option value="T1563">T1563 - Remote Service Session Hijacking</option>
+              <option value="T1563.001">T1563.001 - Remote Service Session Hijacking: SSH Hijacking</option>
+              <option value="T1563.002">T1563.002 - Remote Service Session Hijacking: RDP Hijacking</option>
+              <option value="T1564">T1564 - Hide Artifacts</option>
+              <option value="T1564.001">T1564.001 - Hide Artifacts: Hidden Files and Directories</option>
+              <option value="T1564.002">T1564.002 - Hide Artifacts: Hidden Users</option>
+              <option value="T1564.003">T1564.003 - Hide Artifacts: Hidden Window</option>
+              <option value="T1564.004">T1564.004 - Hide Artifacts: NTFS File Attributes</option>
+              <option value="T1564.005">T1564.005 - Hide Artifacts: Hidden File System</option>
+              <option value="T1564.006">T1564.006 - Hide Artifacts: Run Virtual Instance</option>
+              <option value="T1564.007">T1564.007 - Hide Artifacts: Rootkit</option>
+              <option value="T1564.008">T1564.008 - Hide Artifacts: Email Hiding Rules</option>
+              <option value="T1564.009">T1564.009 - Hide Artifacts: Hidden Window</option>
+              <option value="T1564.010">T1564.010 - Hide Artifacts: Indicator Removal on Host</option>
+              <option value="T1564.011">T1564.011 - Hide Artifacts: Clear Command History</option>
+              <option value="T1564.012">T1564.012 - Hide Artifacts: File/Path Exclusions</option>
+              <option value="T1564.013">T1564.013 - Hide Artifacts: Bind Mounts</option>
+              <option value="T1564.014">T1564.014 - Hide Artifacts: Kernel Modules and Extensions</option>
+              <option value="T1565">T1565 - Data Manipulation</option>
+              <option value="T1565.001">T1565.001 - Data Manipulation: Stored Data Manipulation</option>
+              <option value="T1565.002">T1565.002 - Data Manipulation: Transmitted Data Manipulation</option>
+              <option value="T1565.003">T1565.003 - Data Manipulation: Runtime Data Manipulation</option>
+              <option value="T1566">T1566 - Phishing</option>
+              <option value="T1566.001">T1566.001 - Phishing: Spearphishing Attachment</option>
+              <option value="T1566.002">T1566.002 - Phishing: Spearphishing Link</option>
+              <option value="T1566.003">T1566.003 - Phishing: Spearphishing via Service</option>
+              <option value="T1566.004">T1566.004 - Phishing: Spearphishing with Cloud Service</option>
+              <option value="T1567">T1567 - Exfiltration Over Web Service</option>
+              <option value="T1567.001">T1567.001 - Exfiltration Over Web Service: Exfiltration to Cloud Storage</option>
+              <option value="T1567.002">T1567.002 - Exfiltration Over Web Service: Exfiltration to Code Repository</option>
+              <option value="T1567.003">T1567.003 - Exfiltration Over Web Service: Exfiltration to Social Media</option>
+              <option value="T1567.004">T1567.004 - Exfiltration Over Web Service: Exfiltration to Webmail</option>
+              <option value="T1568">T1568 - Dynamic Resolution</option>
+              <option value="T1568.001">T1568.001 - Dynamic Resolution: Fast Flux DNS</option>
+              <option value="T1568.002">T1568.002 - Dynamic Resolution: Domain Generation Algorithms</option>
+              <option value="T1568.003">T1568.003 - Dynamic Resolution: DNS Calculation</option>
+              <option value="T1569">T1569 - System Services</option>
+              <option value="T1569.001">T1569.001 - System Services: Launchctl</option>
+              <option value="T1569.002">T1569.002 - System Services: Service Execution</option>
+              <option value="T1569.003">T1569.003 - System Services: Windows Service</option>
+              <option value="T1573">T1573 - Encrypted Channel</option>
+              <option value="T1573.001">T1573.001 - Encrypted Channel: Symmetric Cryptography</option>
+              <option value="T1573.002">T1573.002 - Encrypted Channel: Asymmetric Cryptography</option>
+              <option value="T1574">T1574 - Hijack Execution Flow</option>
+              <option value="T1574.001">T1574.001 - Hijack Execution Flow: DLL Search Order Hijacking</option>
+              <option value="T1574.002">T1574.002 - Hijack Execution Flow: DLL Side-Loading</option>
+              <option value="T1574.004">T1574.004 - Hijack Execution Flow: Dylib Hijacking</option>
+              <option value="T1574.005">T1574.005 - Hijack Execution Flow: Executable Installer File Permissions Weakness</option>
+              <option value="T1574.006">T1574.006 - Hijack Execution Flow: Dynamic Linker Hijacking</option>
+              <option value="T1574.007">T1574.007 - Hijack Execution Flow: Path Interception by PATH Environment Variable</option>
+              <option value="T1574.008">T1574.008 - Hijack Execution Flow: Path Interception by Search Order Hijacking</option>
+              <option value="T1574.009">T1574.009 - Hijack Execution Flow: Path Interception by Unquoted Path</option>
+              <option value="T1574.010">T1574.010 - Hijack Execution Flow: Services File Permissions Weakness</option>
+              <option value="T1574.011">T1574.011 - Hijack Execution Flow: Services Registry Permissions Weakness</option>
+              <option value="T1574.012">T1574.012 - Hijack Execution Flow: COR_PROFILER</option>
+              <option value="T1574.013">T1574.013 - Hijack Execution Flow: KernelCallbackTable</option>
+              <option value="T1574.014">T1574.014 - Hijack Execution Flow: Visual Styles</option>
+              <option value="T1578">T1578 - Modify Cloud Compute Infrastructure</option>
+              <option value="T1578.001">T1578.001 - Modify Cloud Compute Infrastructure: Create Snapshot</option>
+              <option value="T1578.002">T1578.002 - Modify Cloud Compute Infrastructure: Create Instance</option>
+              <option value="T1578.003">T1578.003 - Modify Cloud Compute Infrastructure: Delete Snapshot</option>
+              <option value="T1578.004">T1578.004 - Modify Cloud Compute Infrastructure: Delete Instance</option>
+              <option value="T1578.005">T1578.005 - Modify Cloud Compute Infrastructure: Revert Snapshot</option>
+              <option value="T1583">T1583 - Acquire Infrastructure</option>
+              <option value="T1583.001">T1583.001 - Acquire Infrastructure: Domains</option>
+              <option value="T1583.002">T1583.002 - Acquire Infrastructure: DNS Server</option>
+              <option value="T1583.003">T1583.003 - Acquire Infrastructure: Virtual Private Server</option>
+              <option value="T1583.004">T1583.004 - Acquire Infrastructure: Server</option>
+              <option value="T1583.005">T1583.005 - Acquire Infrastructure: Botnet</option>
+              <option value="T1583.006">T1583.006 - Acquire Infrastructure: Web Services</option>
+              <option value="T1583.007">T1583.007 - Acquire Infrastructure: SSL/TLS Certificates</option>
+              <option value="T1583.008">T1583.008 - Acquire Infrastructure: Network Devices</option>
+              <option value="T1584">T1584 - Compromise Infrastructure</option>
+              <option value="T1584.001">T1584.001 - Compromise Infrastructure: Domains</option>
+              <option value="T1584.002">T1584.002 - Compromise Infrastructure: DNS Server</option>
+              <option value="T1584.003">T1584.003 - Compromise Infrastructure: Virtual Private Server</option>
+              <option value="T1584.004">T1584.004 - Compromise Infrastructure: Server</option>
+              <option value="T1584.005">T1584.005 - Compromise Infrastructure: Botnet</option>
+              <option value="T1584.006">T1584.006 - Compromise Infrastructure: Web Services</option>
+              <option value="T1584.007">T1584.007 - Compromise Infrastructure: SSL/TLS Certificates</option>
+              <option value="T1584.008">T1584.008 - Compromise Infrastructure: Network Devices</option>
+              <option value="T1585">T1585 - Establish Accounts</option>
+              <option value="T1585.001">T1585.001 - Establish Accounts: Social Media Accounts</option>
+              <option value="T1585.002">T1585.002 - Establish Accounts: Email Accounts</option>
+              <option value="T1585.003">T1585.003 - Establish Accounts: Cloud Accounts</option>
+              <option value="T1586">T1586 - Compromise Accounts</option>
+              <option value="T1586.001">T1586.001 - Compromise Accounts: Social Media Accounts</option>
+              <option value="T1586.002">T1586.002 - Compromise Accounts: Email Accounts</option>
+              <option value="T1586.003">T1586.003 - Compromise Accounts: Cloud Accounts</option>
+              <option value="T1587">T1587 - Develop Capabilities</option>
+              <option value="T1587.001">T1587.001 - Develop Capabilities: Malware</option>
+              <option value="T1587.002">T1587.002 - Develop Capabilities: Code Signing Certificates</option>
+              <option value="T1587.003">T1587.003 - Develop Capabilities: Digital Certificates</option>
+              <option value="T1587.004">T1587.004 - Develop Capabilities: Exploits</option>
+              <option value="T1588">T1588 - Obtain Capabilities</option>
+              <option value="T1588.001">T1588.001 - Obtain Capabilities: Malware</option>
+              <option value="T1588.002">T1588.002 - Obtain Capabilities: Tool</option>
+              <option value="T1588.003">T1588.003 - Obtain Capabilities: Code Signing Certificates</option>
+              <option value="T1588.004">T1588.004 - Obtain Capabilities: Digital Certificates</option>
+              <option value="T1588.005">T1588.005 - Obtain Capabilities: Exploits</option>
+              <option value="T1588.006">T1588.006 - Obtain Capabilities: Infrastructure</option>
+              <option value="T1588.007">T1588.007 - Obtain Capabilities: Zero-Day Exploits</option>
+              <option value="T1589">T1589 - Gather Victim Identity Information</option>
+              <option value="T1589.001">T1589.001 - Gather Victim Identity Information: Credentials</option>
+              <option value="T1589.002">T1589.002 - Gather Victim Identity Information: Email Addresses</option>
+              <option value="T1589.003">T1589.003 - Gather Victim Identity Information: Employee Names</option>
+              <option value="T1590">T1590 - Gather Victim Network Information</option>
+              <option value="T1590.001">T1590.001 - Gather Victim Network Information: Domain Properties</option>
+              <option value="T1590.002">T1590.002 - Gather Victim Network Information: DNS</option>
+              <option value="T1590.003">T1590.003 - Gather Victim Network Information: Network Topology</option>
+              <option value="T1590.004">T1590.004 - Gather Victim Network Information: IP Addresses</option>
+              <option value="T1590.005">T1590.005 - Gather Victim Network Information: Network Trust Dependencies</option>
+              <option value="T1590.006">T1590.006 - Gather Victim Network Information: Network Security Appliances</option>
+              <option value="T1591">T1591 - Gather Victim Org Information</option>
+              <option value="T1591.001">T1591.001 - Gather Victim Org Information: Business Relationships</option>
+              <option value="T1591.002">T1591.002 - Gather Victim Org Information: Determining Roles</option>
+              <option value="T1591.003">T1591.003 - Gather Victim Org Information: Social Media</option>
+              <option value="T1591.004">T1591.004 - Gather Victim Org Information: Employee Information</option>
+              <option value="T1592">T1592 - Gather Victim Host Information</option>
+              <option value="T1592.001">T1592.001 - Gather Victim Host Information: Hardware</option>
+              <option value="T1592.002">T1592.002 - Gather Victim Host Information: Software</option>
+              <option value="T1592.003">T1592.003 - Gather Victim Host Information: Firmware</option>
+              <option value="T1592.004">T1592.004 - Gather Victim Host Information: Client Configurations</option>
+              <option value="T1593">T1593 - Search Open Technical Databases</option>
+              <option value="T1593.001">T1593.001 - Search Open Technical Databases: WHOIS</option>
+              <option value="T1593.002">T1593.002 - Search Open Technical Databases: Digital Certificates</option>
+              <option value="T1593.003">T1593.003 - Search Open Technical Databases: DNS/Passive DNS</option>
+              <option value="T1595">T1595 - Active Scanning</option>
+              <option value="T1595.001">T1595.001 - Active Scanning: Scanning IP Blocks</option>
+              <option value="T1595.002">T1595.002 - Active Scanning: Vulnerability Scanning</option>
+              <option value="T1595.003">T1595.003 - Active Scanning: Wordlist Scanning</option>
+              <option value="T1596">T1596 - Search Open Websites/Domains</option>
+              <option value="T1596.001">T1596.001 - Search Open Websites/Domains: Social Media</option>
+              <option value="T1596.002">T1596.002 - Search Open Websites/Domains: Search Engines</option>
+              <option value="T1596.003">T1596.003 - Search Open Websites/Domains: Code Repositories</option>
+              <option value="T1596.004">T1596.004 - Search Open Websites/Domains: Dark Web</option>
+              <option value="T1596.005">T1596.005 - Search Open Websites/Domains: Forums</option>
+              <option value="T1597">T1597 - Search Open Sources</option>
+              <option value="T1597.001">T1597.001 - Search Open Sources: Social Media</option>
+              <option value="T1597.002">T1597.002 - Search Open Sources: Technical Blogs</option>
+              <option value="T1598">T1598 - Phishing for Information</option>
+              <option value="T1598.001">T1598.001 - Phishing for Information: Spearphishing Attachment</option>
+              <option value="T1598.002">T1598.002 - Phishing for Information: Spearphishing Link</option>
+              <option value="T1598.003">T1598.003 - Phishing for Information: Spearphishing via Service</option>
+              <option value="T1598.004">T1598.004 - Phishing for Information: Spearphishing with Cloud Service</option>
+              <option value="T1599">T1599 - Network Boundary Bridging</option>
+              <option value="T1599.001">T1599.001 - Network Boundary Bridging: Protocol Tunneling</option>
+              <option value="T1600">T1600 - Weaken Encryption</option>
+              <option value="T1600.001">T1600.001 - Weaken Encryption: Reduce Key Space</option>
+              <option value="T1600.002">T1600.002 - Weaken Encryption: Disable Algorithm</option>
+              <option value="T1601">T1601 - Modify System Image</option>
+              <option value="T1601.001">T1601.001 - Modify System Image: Bootkit</option>
+              <option value="T1601.002">T1601.002 - Modify System Image: Patch System Image</option>
+              <option value="T1602">T1602 - Data from Configuration Repository</option>
+              <option value="T1602.001">T1602.001 - Data from Configuration Repository: SNMP (MIB Dump)</option>
+              <option value="T1602.002">T1602.002 - Data from Configuration Repository: Network Device Configuration Dump</option>
+              <option value="T1606">T1606 - Forge Web Credentials</option>
+              <option value="T1606.001">T1606.001 - Forge Web Credentials: Web Cookies</option>
+              <option value="T1606.002">T1606.002 - Forge Web Credentials: SAML Tokens</option>
+              <option value="T1608">T1608 - Stage Capabilities</option>
+              <option value="T1608.001">T1608.001 - Stage Capabilities: Upload Malware</option>
+              <option value="T1608.002">T1608.002 - Stage Capabilities: Upload Tool</option>
+              <option value="T1608.003">T1608.003 - Stage Capabilities: Upload Exploit</option>
+              <option value="T1608.004">T1608.004 - Stage Capabilities: Upload Payload</option>
+              <option value="T1608.005">T1608.005 - Stage Capabilities: Install Digital Certificate</option>
+              <option value="T1608.006">T1608.006 - Stage Capabilities: Upload Firmware</option>
+              <option value="T1614">T1614 - System Location Discovery</option>
+              <option value="T1614.001">T1614.001 - System Location Discovery: System Language Discovery</option>
+
+            </datalist>
+            </div>
+          </form>
+          <div id="actions-display"></div>
+          <div class="actions-wrapper">
+            <table class="actions-table">
+              <colgroup>
+                <col class="col-1">
+                <col class="col-2">
+                <col class="col-3">
+              </colgroup>
+              <thead>
+                <!-- Header wird von TS eingefügt -->
+              </thead>
+              <tbody>
+                <!-- Inhalt wird von TS eingefügt -->
+              </tbody>
+            </table>
+            <div class="phases-container" id="phases-container"></div>
+          </div>
+        </main>
+
+        <!-- Seitenleiste rechts -->
+        <aside class="sidebar-right">
+          <div id="it-dependencies-container">
+            <div class="card-header">
+              <h3>IT Dependencies</h3>
+              <button type="button" class="toggle-btn" aria-expanded="true" aria-controls="it-dependencies-content">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </button>
+            </div>
+            <div class="card-content" id="it-dependencies-content">
+              <form id="it-dependencies-form">
+                <fieldset class="group">
+                  <div class="form-group">
+                    <label for="ir-capacity-select">Capacities for Incident Response</label>
+                    <select id="ir-capacity-select" required>
+                      <option value="" disabled selected>-- Please choose --</option>
+                      <option value="important_only">Only for the most important</option>
+                      <option value="normal">Normal</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="reimage-select">Reimage of Clients</label>
+                    <select id="reimage-select" required>
+                      <option value="" disabled selected>Please select an option</option>
+                      <option value="reimage">Reimaging possible without problems (data completely in the cloud)</option>
+                      <option value="noreimage">Reimaging only in emergencies (local data present)</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="forensics-select">Forensics Know-How</label>
+                    <select id="forensics-select" required>
+                      <option value="" disabled selected>Please select an option</option>
+                      <option value="noforensics">No IT Forensics Know-How</option>
+                      <option value="basicforensics">Basic IT Forensics Know-How (Incident Response)</option>
+                      <option value="profforensics">Professional IT Forensics Know-How (Securing evidence)</option>
+                    </select>
+                  </div>
+                </fieldset>
+                <button type="submit" id="it-save-btn">Update Settings</button>
+                <p id="it-status" aria-live="polite"></p>
+              </form>
+            </div>
+          </div>
+          <div id="compliance-container">
+            <div class="card-header">
+              <h3>Compliance</h3>
+              <button type="button" class="toggle-btn" aria-expanded="true" aria-controls="compliance-content">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </button>
+            </div>
+            <div class="card-content" id="compliance-content">
+              <form id="compliance-form">
+                <h4>Regulatory</h4>
+                <div>
+                  <input type="checkbox" id="bait" name="regulatory" value="BAIT / VAIT / KAIT / ZAIT">
+                  <label for="bait">BAIT / VAIT / KAIT / ZAIT</label>
+                </div>
+                <div>
+                  <input type="checkbox" id="bsig" name="regulatory" value="BSIG & German IT Security Act 2.0">
+                  <label for="bsig">BSIG & German IT Security Act 2.0</label>
+                </div>
+                <div>
+                  <input type="checkbox" id="dora" name="regulatory" value="DORA">
+                  <label for="dora">DORA</label>
+                </div>
+                <div>
+                  <input type="checkbox" id="energiekritis" name="regulatory" value="EnergieKRITIS / EnWG §11">
+                  <label for="energiekritis">EnergieKRITIS / EnWG §11</label>
+                </div>
+                <div>
+                  <input type="checkbox" id="gdpr" name="regulatory" value="EU-GDPR & BDSG">
+                  <label for="gdpr">EU-GDPR & BDSG</label>
+                </div>
+                <div>
+                  <input type="checkbox" id="nis2" name="regulatory" value="NIS-2">
+                  <label for="nis2">NIS-2</label>
+                </div>
+                <div>
+                  <input type="checkbox" id="tkg" name="regulatory" value="TKG">
+                  <label for="tkg">TKG</label>
+                </div>
+                <h4>Standards & Frameworks</h4>
+                <div>
+                  <input type="checkbox" id="b3s" name="voluntary" value="B3S">
+                  <label for="b3s">B3S</label>
+                </div>
+                <div>
+                  <input type="checkbox" id="bsi-grundschutz" name="voluntary" value="BSI IT-Grundschutz">
+                  <label for="bsi-grundschutz">BSI IT-Grundschutz</label>
+                </div>
+                <div>
+                  <input type="checkbox" id="c5" name="voluntary" value="C5">
+                  <label for="c5">C5</label>
+                </div>
+                <div>
+                  <input type="checkbox" id="gematik" name="voluntary" value="gematik security guidelines & KIM / TI security requirements">
+                  <label for="gematik">gematik security guidelines & KIM / TI security requirements</label>
+                </div>
+                <div>
+                  <input type="checkbox" id="iso27001" name="voluntary" value="ISO 27001">
+                  <label for="iso27001">ISO 27001</label>
+                </div>
+                <div>
+                  <input type="checkbox" id="soc2" name="voluntary" value="SOC 2">
+                  <label for="soc2">SOC 2</label>
+                </div>
+                <div>
+                  <input type="checkbox" id="tisax" name="voluntary" value="TISAX">
+                  <label for="tisax">TISAX</label>
+                </div>
+                <button type="submit" id="context-save-btn">Update Settings</button>
+                <p id="compliance-status" aria-live="polite"></p>
+              </form>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
