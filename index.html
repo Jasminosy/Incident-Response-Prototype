@@ -7,11 +7,11 @@
     <title>Web GUI with TypeScript</title>
     <link rel="stylesheet" href="src/style.css">
     <style>
-      /* Stile für die unsichtbare Tabelle in #actions-display */
+      /* unsichtbare Tabelle in #actions-display */
       .actions-table {
         width: 100%;
         border-collapse: collapse;
-        table-layout: fixed; /* Wichtig, damit die Spaltenbreiten respektiert werden */
+        table-layout: fixed;
       }
 
       .actions-table th, .actions-table td {
@@ -74,21 +74,16 @@
               <option value="DependencyHijack">Third-party library compromise (npm/pip) / Dependency Hijack</option>
               <option value="Mirai">DDoS / IoT-Botnet Attack - Mirai</option>
               <option value="Equifax">Data Exfiltration - Equifax</option>
-              <option value="Brute Force">Brute Force / Credential Stuffing</option>
               <option value="Insider Threat">Insider Threats</option>
               <option value="XSS">Cross Site Scripting</option>
               <option value="SQLi">SQL Injection</option>
               <option value="Golden">Pass-the-Hash / Kerberos Golden Ticket Attack</option>
-              <option value="Social Engineering">Social Engineering</option>
-              <option value="DNS-Spoofing">DNS Spoofing / Cache Poisoning</option>
-              <option value="TLS Downgrade">HTTPS/SSL-Stripping und TLS-Downgrade</option>
-              <option value="E-Mail MitM">E-Mail-MitM (SMTP/STARTTLS Downgrade)</option>
-              <option value="Session Hijacking">Session Hijacking / Sidejacking</option>
+              <option value="E-Mail MitM">E-Mail-MitM / SMTP/STARTTLS Downgrade</option>
               <option value="Skeleton Key Attack">Skeleton Key Attack</option>
               <option value="Excel">Suspicious Microsoft Excel Behavior</option>
               <option value="Word">Suspicious Microsoft Word Behavior</option>
               <option value="Account enumeration reconnaissance">Account enumeration reconnaissance</option>
-              <option value="Overpass the has Attack">Overpass the has Attack</option>
+              <option value="Overpass the hash Attack">Overpass the hash Attack</option>
               <option value="Malware Loader">Malware Loader/Dropper</option>
               <option value="BumbleBee">Malware Loader/Dropper - BumbleBee</option>
               <option value="C2 Server">Command and Control Server</option>
