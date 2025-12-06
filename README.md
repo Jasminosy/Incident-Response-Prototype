@@ -1,10 +1,9 @@
 # Incident-Response-Prototype
 
 1. Download the Repository
+   Download all files and directories contained in this repository and save them to a local directory of your choice.
 
-Download all files and directories contained in this repository and save them to a local directory of your choice.
-
-2. Install Node.js and npm
+3. Install Node.js and npm
 
 Ensure that Node.js (including npm) is installed on your system.
 Download: https://nodejs.org/en/download/
